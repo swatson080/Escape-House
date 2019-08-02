@@ -5,6 +5,49 @@
 #include <sstream>
 #include <climits>
 
+class room {
+	private:
+		std::string m_roomName;
+	public:
+		room() {
+			m_roomName = "Unknown name";
+		}
+		room(std::string name) : m_roomName(name) {}
+		void setRoomName(std::string name) {
+			m_roomName = name;
+		}
+		std::string getRoomName() {
+			return m_roomName;
+		}
+};
+
+class house {
+	private:
+		const static int m_numRooms = 4;
+		const std::string m_roomNames[m_numRooms] = {"Bedroom","Bathroom","Kitchen","Living Room"};
+		bool locked;	
+		room rooms[m_numRooms];
+	public:
+		house() {
+			for(int i = 0; i < m_numRooms; i++) {
+				rooms[i].setRoomName(m_roomNames[i]);
+			}	
+			locked = true;
+		}
+		int getNumRooms() {
+			return m_numRooms;
+		}
+		void printRoomNames() {
+			for(int i = 0; i < m_numRooms; i++) {
+				std::cout << rooms[i].getRoomName() << " " << std::flush;
+			}
+			std::cout << std::endl;
+		}
+		bool getState() {
+			return locked;
+		}
+};
+
 void play();
 
 int menuChoice();
@@ -33,8 +76,16 @@ int main() {
 }
 
 void play() {
-// Add game loop here
-	std::cout << "Playing game..." << std::endl;
+// Create a test house object
+	house testHouse;
+	std::cout << "House has been created with " << testHouse.getNumRooms() << " rooms. Right now it is " << std::flush;
+	if(testHouse.getState()) {
+		std::cout << " locked." << std::endl;
+	}
+	else {
+		std::cout << " unlocked." << std::endl;
+	}	
+	testHouse.printRoomNames();
 }
 
 // Returns users selection 
