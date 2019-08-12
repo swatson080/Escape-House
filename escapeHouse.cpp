@@ -74,7 +74,7 @@ class house {
 			}
 			std::cout << std::endl;
 		}
-		std::string printCurrentRoom(int currentRoom) {
+		std::string getCurrentRoomName(int currentRoom) {
 			return rooms[currentRoom].getRoomName();
 		}
 		
@@ -88,15 +88,46 @@ class house {
 					}
 					break;
 				case (int)roomNumbers::livingRoom :
+					for(int i = 0; i < m_numLRoomExits; i++) {
+						std::cout << i + 1 << ". " << rooms[m_livingRoomExits[i]].getRoomName() << std::endl;
+					}
 					break;
 				case (int)roomNumbers::hallway :
+					for(int i = 0; i < m_numHallwayExits; i++) {
+						std::cout << i + 1 << ". " << rooms[m_hallwayExits[i]].getRoomName() << std::endl;
+					}
 					break;
 				case (int)roomNumbers::kitchen :
+					for(int i = 0; i < m_numKitchenExits; i++) {
+						std::cout << i + 1 << ". " << rooms[m_kitchenExits[i]].getRoomName() << std::endl;
+					}
 					break;
 				case (int)roomNumbers::diningRoom :
+					for(int i = 0; i < m_numDRoomExits; i++) {
+						std::cout << i + 1 << ". " << rooms[m_diningRoomExits[i]].getRoomName() << std::endl;
+					}
 					break;
 			}
-			std::cout << ">" << std::flush;
+		}	
+
+		int getActualMove(int currentRoom, int newRoom) {
+			switch(currentRoom) {
+				case (int)roomNumbers::bedroom :
+					newRoom = m_bedroomExits[newRoom-1];
+					return newRoom;
+				case (int)roomNumbers::livingRoom :
+					newRoom = m_livingRoomExits[newRoom-1];
+					return newRoom;
+				case (int)roomNumbers::hallway :
+					newRoom = m_hallwayExits[newRoom - 1];
+					return newRoom;
+				case (int)roomNumbers::kitchen :
+					newRoom = m_kitchenExits[newRoom - 1];
+					return newRoom;
+				case (int)roomNumbers::diningRoom :
+					newRoom = m_diningRoomExits[newRoom - 1];
+					return newRoom;
+			}
 		}	
 
 		bool getState() {
@@ -109,14 +140,6 @@ class player {
 		int currentRoom;
 	public:
 		player() : currentRoom(0) {}
-		int getCurrentRoom() {
-			return currentRoom;
-		}
-		void setCurrentRoom(int newRoom) {
-			currentRoom = newRoom;
-		}
-		void updateRoom(house &house) {
-		}
 		// Gets integer input from user
 		int getIntInput(std::string message) {
 			std::string rawInput;
@@ -144,6 +167,26 @@ class player {
 			return input;
 		}
 
+		int getCurrentRoom() {
+			return currentRoom;
+		}
+		void setCurrentRoom(int newRoom) {
+			currentRoom = newRoom;
+		}
+		void updateRoom(house &house) {
+			house.printAvailableRooms(currentRoom);
+			while(true) {
+				int newRoom = getIntInput("Enter number of the room you would like to move to\n>");
+				if(newRoom > 0 && newRoom <= house.getNumRoomExits(currentRoom)) {
+					newRoom = house.getActualMove(currentRoom, newRoom);
+					setCurrentRoom(newRoom);
+					return;
+				}
+				else {
+					std::cout << "Bad Room Selection" << std::endl;
+				}
+			}
+		}
 };
 
 // FUNCTION DEFINITIONS ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -189,10 +232,10 @@ int menuChoice() {
 
 int gameLoopMenuChoice(player player, house house) {
 	std::string menuMessage = 
-		"\nWhat do you want to do?\n1. Move to another room\n2.Search " + house.printCurrentRoom(player.getCurrentRoom()) + "\n>";
+		"\nWhat do you want to do?\n1. Move to another room\n2.Search " + house.getCurrentRoomName(player.getCurrentRoom()) + "\n>";
 	while(true) {
 		int selection = getIntInput(menuMessage);
-		if(selection > 0 && selection <= 2) {
+		if(selection > 0 && selection <= 3) {
 			return selection;
 		}
 		else {
@@ -245,17 +288,21 @@ void play() {
 	*/
 	house house;
 	player player;
-	house.printCurrentRoom(player.getCurrentRoom());
-	switch(gameLoopMenuChoice(player,house)) {
-		case 1:
-			std::cout << "Okay, switching rooms..." << std::endl;
-			break;
-		case 2:
-			std::cout << "Okay, searching room..." << std::endl;
-			break;		
+	bool exit = false;
+	
+	while(!exit) {
+		std::cout << "You are in the " << house.getCurrentRoomName(player.getCurrentRoom()) << "." << std::endl;
+		switch(gameLoopMenuChoice(player, house)) {
+			case 1:
+				player.updateRoom(house);
+				break;
+			case 2:
+				std::cout << "Okay, searching room..." << std::endl;
+				break;		
+			case 3:
+				exit = true;
+				break;
+		}
 	}
-	house.printAvailableRooms(player.getCurrentRoom());
-	player.updateRoom(house);
-	house.printCurrentRoom(player.getCurrentRoom());
 }
 
