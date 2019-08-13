@@ -129,7 +129,9 @@ class house {
 					return newRoom;
 			}
 		}	
-
+		int getExitRoom() {
+			return (int)roomNumbers::hallway;
+		}
 		bool getState() {
 			return locked;
 		}
@@ -174,9 +176,10 @@ class player {
 			currentRoom = newRoom;
 		}
 		void updateRoom(house &house) {
+			std::cout << "Move where?" << std::endl;
 			house.printAvailableRooms(currentRoom);
 			while(true) {
-				int newRoom = getIntInput("Enter number of the room you would like to move to\n>");
+				int newRoom = getIntInput("Input a room number\n>");
 				if(newRoom > 0 && newRoom <= house.getNumRoomExits(currentRoom)) {
 					newRoom = house.getActualMove(currentRoom, newRoom);
 					setCurrentRoom(newRoom);
@@ -203,6 +206,7 @@ int main() {
 	do {
 		switch(menuChoice()) {
 			case 1:
+				std::cout << "STARTING GAME\n" << std::endl;
 				play();
 				break;
 			case 2:
@@ -232,10 +236,14 @@ int menuChoice() {
 
 int gameLoopMenuChoice(player player, house house) {
 	std::string menuMessage = 
-		"\nWhat do you want to do?\n1. Move to another room\n2.Search " + house.getCurrentRoomName(player.getCurrentRoom()) + "\n>";
+		"Choose an option:\n1. Move to another room\n2.Search " + house.getCurrentRoomName(player.getCurrentRoom()) + "\n";
+	if(player.getCurrentRoom() == house.getExitRoom()) {
+		menuMessage += "3. Open door to outside\n";
+	}
+	menuMessage += ">";
 	while(true) {
 		int selection = getIntInput(menuMessage);
-		if(selection > 0 && selection <= 3) {
+		if(selection > 0 && selection <= 4) {
 			return selection;
 		}
 		else {
@@ -288,10 +296,10 @@ void play() {
 	*/
 	house house;
 	player player;
-	bool exit = false;
+	bool exit = false; // This is a temporary flag, will eventually be replaced by the house locked state
 	
 	while(!exit) {
-		std::cout << "You are in the " << house.getCurrentRoomName(player.getCurrentRoom()) << "." << std::endl;
+		std::cout << "LOCATION:" << house.getCurrentRoomName(player.getCurrentRoom()) << std::endl;
 		switch(gameLoopMenuChoice(player, house)) {
 			case 1:
 				player.updateRoom(house);
@@ -300,8 +308,19 @@ void play() {
 				std::cout << "Okay, searching room..." << std::endl;
 				break;		
 			case 3:
+				if(player.getCurrentRoom() == house.getExitRoom()) {
+					std::cout << "You escaped!" << std::endl;
+					break;
+				}
+				else {
+					std::cout << "Invalid input" << std::endl;
+					break;
+				}
+			case 4:
 				exit = true;
 				break;
+			default:
+				std::cout << "Invalid input" << std::endl;
 		}
 	}
 }
