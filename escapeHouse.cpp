@@ -10,8 +10,6 @@
 class container {
 };
 
-class items {
-};
 
 
 class room {
@@ -137,11 +135,55 @@ class house {
 		}
 };
 
+class inventory {
+	private:
+		const static int m_numItems = 1;
+		enum class itemNumbers { key, total };
+		const std::string itemNames[(int)itemNumbers::total] = {"Key" };
+		int itemLocation[(int)itemNumbers::total];
+		int itemCounts[(int)itemNumbers::total];
+		bool itemFound[(int)itemNumbers::total]; // Indicates whether items have been found or not
+	public:
+		inventory(house &house) {
+			srand(time(NULL));
+			int numRooms = house.getNumRooms();
+			for(int i = 0; i < (int)itemNumbers::total; i++) {
+				itemCounts[i] = 0;
+				itemLocation[i] = rand() % (numRooms);
+				itemFound[i] = false;
+			}
+		}
+
+		int getTotalItems() {
+			return (int)itemNumbers::total;
+		}
+
+		std::string getItemName(int i) {
+			return itemNames[i];
+		}
+
+		int getItemLoc(int i) {
+			return itemLocation[i];
+		}
+
+		bool checkItemFound(int i) {
+		       return itemFound[i];
+		}	       
+
+		void setItemFound(int i) {
+			itemFound[i] = true;
+		}
+
+		void incrementItem(int i) {
+			itemCounts[i]++;
+		}
+};
+
 class player {
 	private: 
 		int currentRoom;
 	public:
-		player() : currentRoom(0) {}
+		player() : currentRoom(0) {} // Set start room to bedroom
 		// Gets integer input from user
 		int getIntInput(std::string message) {
 			std::string rawInput;
@@ -189,6 +231,16 @@ class player {
 					std::cout << "Bad Room Selection" << std::endl;
 				}
 			}
+		}
+
+		void searchRoom(inventory &inventory, house &house) {
+			for(int i = 0; i < inventory.getTotalItems(); i++) {
+				if(currentRoom == inventory.getItemLoc(i) && !inventory.checkItemFound(i)) {
+					inventory.incrementItem(i);
+					inventory.setItemFound(i);
+					std::cout << "You found a " << inventory.getItemName(i) << std::endl;
+				}
+			}			
 		}
 };
 
@@ -296,6 +348,7 @@ void play() {
 	*/
 	house house;
 	player player;
+	inventory inventory(house);
 	bool exit = false; // This is a temporary flag, will eventually be replaced by the house locked state
 	
 	while(!exit) {
@@ -305,7 +358,8 @@ void play() {
 				player.updateRoom(house);
 				break;
 			case 2:
-				std::cout << "Okay, searching room..." << std::endl;
+				player.searchRoom(inventory,house);
+				std::cout << "Finished searching " << house.getCurrentRoomName(player.getCurrentRoom()) << std::endl;
 				break;		
 			case 3:
 				if(player.getCurrentRoom() == house.getExitRoom()) {
