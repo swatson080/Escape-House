@@ -28,7 +28,7 @@ class house {
 	private:
 		const static int m_numRooms = 5;
 		enum class roomNumbers {bedroom, livingRoom, hallway, kitchen, diningRoom};
-		const std::string m_roomNames[m_numRooms] = {"Bedroom","Living Room", "Hallway", "Kitchen", "Dining Room"};
+		const std::string m_roomNames[m_numRooms] = {"BEDROOM","LIVING ROOM", "HALLWAY", "KITCHEN", "DINING ROOM"};
 		const static int m_numBedroomExits = 2; // Number of available moves from the bedroom
 		const static int m_numLRoomExits = 2; // Number of available moves from the living room
 		const static int m_numHallwayExits = 2; // Number of available moves from the hallway
@@ -133,13 +133,16 @@ class house {
 		bool getState() {
 			return locked;
 		}
+		void setState() {
+			locked = false;
+		}
 };
 
 class inventory {
 	private:
 		const static int m_numItems = 1;
 		enum class itemNumbers { key, total };
-		const std::string itemNames[(int)itemNumbers::total] = {"Key" };
+		const std::string itemNames[(int)itemNumbers::total] = {"KEY" };
 		int itemLocation[(int)itemNumbers::total];
 		int itemCounts[(int)itemNumbers::total];
 		bool itemFound[(int)itemNumbers::total]; // Indicates whether items have been found or not
@@ -169,6 +172,10 @@ class inventory {
 		bool checkItemFound(int i) {
 		       return itemFound[i];
 		}	       
+
+		bool checkKey() {
+			return itemFound[(int)itemNumbers::key];
+		}
 
 		void setItemFound(int i) {
 			itemFound[i] = true;
@@ -241,6 +248,16 @@ class player {
 					std::cout << "You found a " << inventory.getItemName(i) << std::endl;
 				}
 			}			
+		}
+
+		void leaveHouse(inventory &inventory, house &house) {
+			if(inventory.checkKey()) {
+				house.setState();
+				std::cout << "You escaped from the house!" << std::endl;
+			}
+			else {
+				std::cout << "You need the key to escape from the house!" << std::endl;
+			}
 		}
 };
 
@@ -351,7 +368,7 @@ void play() {
 	inventory inventory(house);
 	bool exit = false; // This is a temporary flag, will eventually be replaced by the house locked state
 	
-	while(!exit) {
+	while(house.getState()) {
 		std::cout << "LOCATION:" << house.getCurrentRoomName(player.getCurrentRoom()) << std::endl;
 		switch(gameLoopMenuChoice(player, house)) {
 			case 1:
@@ -363,7 +380,7 @@ void play() {
 				break;		
 			case 3:
 				if(player.getCurrentRoom() == house.getExitRoom()) {
-					std::cout << "You escaped!" << std::endl;
+					player.leaveHouse( inventory, house );
 					break;
 				}
 				else {
