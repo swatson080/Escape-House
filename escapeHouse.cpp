@@ -26,9 +26,9 @@ class room {
 
 class house {
 	private:
-		const static int m_numRooms = 5;
-		enum class roomNumbers {bedroom, livingRoom, hallway, kitchen, diningRoom};
-		const std::string m_roomNames[m_numRooms] = {"BEDROOM","LIVING ROOM", "HALLWAY", "KITCHEN", "DINING ROOM"};
+		//const static int m_numRooms = 5;
+		enum class roomNumbers {bedroom, livingRoom, hallway, kitchen, diningRoom, total};
+		const std::string m_roomNames[(int)roomNumbers::total] = {"BEDROOM","LIVING ROOM", "HALLWAY", "KITCHEN", "DINING ROOM"};
 		const static int m_numBedroomExits = 2; // Number of available moves from the bedroom
 		const static int m_numLRoomExits = 2; // Number of available moves from the living room
 		const static int m_numHallwayExits = 2; // Number of available moves from the hallway
@@ -40,17 +40,17 @@ class house {
 		const int m_hallwayExits[m_numHallwayExits] = { (int)roomNumbers::livingRoom, (int)roomNumbers::kitchen };
 		const int m_kitchenExits[m_numKitchenExits] = { (int)roomNumbers::bedroom, (int)roomNumbers::hallway, (int)roomNumbers::diningRoom };
 		const int m_diningRoomExits[m_numDRoomExits] = { (int)roomNumbers::kitchen };
-		room rooms[m_numRooms];
+		room rooms[(int)roomNumbers::total];
 		bool locked;	
 	public:
 		house() {
-			for(int i = 0; i < m_numRooms; i++) {
+			for(int i = 0; i < (int)roomNumbers::total; i++) {
 				rooms[i].setRoomName(m_roomNames[i]);
 			}	
 			locked = true;
 		}
 		int getNumRooms() {
-			return m_numRooms;
+			return (int)roomNumbers::total;
 		}
 		int getNumRoomExits(int currentRoom) {
 			switch(currentRoom) {
@@ -67,7 +67,7 @@ class house {
 			}
 		}
 		void printRoomNames() {
-			for(int i = 0; i < m_numRooms; i++) {
+			for(int i = 0; i < (int)roomNumbers::total; i++) {
 				std::cout << rooms[i].getRoomName() << " " << std::flush;
 			}
 			std::cout << std::endl;
@@ -140,9 +140,9 @@ class house {
 
 class inventory {
 	private:
-		const static int m_numItems = 1;
-		enum class itemNumbers { key, total };
-		const std::string itemNames[(int)itemNumbers::total] = {"KEY" };
+		//const static int m_numItems = 1;
+		enum class itemNumbers { key, amulet, total };
+		const std::string itemNames[(int)itemNumbers::total] = {"KEY", "SILVER CHARM" };
 		int itemLocation[(int)itemNumbers::total];
 		int itemCounts[(int)itemNumbers::total];
 		bool itemFound[(int)itemNumbers::total]; // Indicates whether items have been found or not
@@ -189,8 +189,9 @@ class inventory {
 class player {
 	private: 
 		int currentRoom;
+		int fear;
 	public:
-		player() : currentRoom(0) {} // Set start room to bedroom
+		player() : currentRoom(0), fear(0) {} // Set start room to bedroom
 		// Gets integer input from user
 		int getIntInput(std::string message) {
 			std::string rawInput;
@@ -216,6 +217,14 @@ class player {
 			std::string input;
 			std::getline(std::cin,input);
 			return input;
+		}
+
+		void setFear(int f) {
+			fear = f;
+		}
+
+		int getFear() {
+			return fear;
 		}
 
 		int getCurrentRoom() {
@@ -369,7 +378,7 @@ void play() {
 	bool exit = false; // This is a temporary flag, will eventually be replaced by the house locked state
 	
 	while(house.getState()) {
-		std::cout << "LOCATION:" << house.getCurrentRoomName(player.getCurrentRoom()) << std::endl;
+		std::cout << "LOCATION:" << house.getCurrentRoomName(player.getCurrentRoom()) << " | FEAR: " << player.getFear() << std::endl;
 		switch(gameLoopMenuChoice(player, house)) {
 			case 1:
 				player.updateRoom(house);
