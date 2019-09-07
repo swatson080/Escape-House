@@ -141,7 +141,7 @@ class house {
 class inventory {
 	private:
 		//const static int m_numItems = 1;
-		enum class itemNumbers { key, amulet, total };
+		enum class itemNumbers { key, charm, total };
 		const std::string itemNames[(int)itemNumbers::total] = {"KEY", "SILVER CHARM" };
 		int itemLocation[(int)itemNumbers::total];
 		int itemCounts[(int)itemNumbers::total];
@@ -172,6 +172,10 @@ class inventory {
 		bool checkItemFound(int i) {
 		       return itemFound[i];
 		}	       
+
+		bool checkCharm() {
+			return itemFound[(int)itemNumbers::charm];
+		}
 
 		bool checkKey() {
 			return itemFound[(int)itemNumbers::key];
@@ -217,6 +221,47 @@ class player {
 			std::string input;
 			std::getline(std::cin,input);
 			return input;
+		}
+
+		int displayMoveChoice(house &house) {
+			std::string menuMessage = 
+				"Choose an option:\n1. Move to another room\n2.Search " + house.getCurrentRoomName(currentRoom) + "\n";
+			if(currentRoom == house.getExitRoom()) {
+				menuMessage += "3. Open door to outside\n";
+			}
+			menuMessage += ">";
+			while(true) {
+				int selection = getIntInput(menuMessage);
+				if(selection > 0 && selection <= 3) {
+					return selection;
+				}
+				else {
+					std::cout << "Invalid Input" << std::endl;
+				}
+			}
+		}
+		
+		void move(house &house, inventory &inventory) {
+			switch(displayMoveChoice(house)) {
+				case 1:
+					updateRoom(house);
+					break;
+				case 2:
+					searchRoom(inventory,house);
+					std::cout << "Finished searching " << house.getCurrentRoomName(currentRoom) << std::endl;
+					break;		
+				case 3:
+					if(currentRoom == house.getExitRoom()) {
+						leaveHouse( inventory, house );
+						break;
+					}
+					else {
+						std::cout << "Invalid input" << std::endl;
+						break;
+					}
+				default:
+					std::cout << "Invalid input" << std::endl;
+			}
 		}
 
 		void setFear(int f) {
@@ -270,6 +315,25 @@ class player {
 		}
 };
 
+class ghost {
+	private:
+		int currentRoom;
+	public:
+		ghost(house &house) {
+			int numRooms = house.getNumRooms();
+			currentRoom = rand() % numRooms;
+		};
+
+		void move(house &house) {
+			int numRooms = house.getNumRooms();
+			currentRoom = rand() % numRooms;
+		}	
+
+		int getCurrentRoom() {
+			return currentRoom;
+		}
+};
+
 // FUNCTION DEFINITIONS ////////////////////////////////////////////////////////////////////////////////////////////////////
 int menuChoice();
 int gameLoopMenuChoice(player player, house house);
@@ -312,24 +376,6 @@ int menuChoice() {
 	}
 }
 
-int gameLoopMenuChoice(player player, house house) {
-	std::string menuMessage = 
-		"Choose an option:\n1. Move to another room\n2.Search " + house.getCurrentRoomName(player.getCurrentRoom()) + "\n";
-	if(player.getCurrentRoom() == house.getExitRoom()) {
-		menuMessage += "3. Open door to outside\n";
-	}
-	menuMessage += ">";
-	while(true) {
-		int selection = getIntInput(menuMessage);
-		if(selection > 0 && selection <= 4) {
-			return selection;
-		}
-		else {
-			std::cout << "Invalid Input" << std::endl;
-		}
-	}
-}
-
 // Gets integer input from user
 int getIntInput(std::string message) {
 	std::string rawInput;
@@ -358,50 +404,25 @@ std::string getStringInput() {
 }
 
 void play() {
-// Create a test house object
-/*
-	house testHouse;
-	player testPlayer;
-	std::cout << "House has been created with " << testHouse.getNumRooms() << " rooms. Right now it is " << std::flush;
-	if(testHouse.getState()) {
-		std::cout << " locked." << std::endl;
-	}
-	else {
-		std::cout << " unlocked." << std::endl;
-	}	
-	testHouse.printRoomNames();
-	std::cout << "You are in the " << testHouse.printCurrentRoom(testPlayer.getCurrentRoom()) << "." << std::endl;
-	*/
 	house house;
 	player player;
 	inventory inventory(house);
-	bool exit = false; // This is a temporary flag, will eventually be replaced by the house locked state
+	ghost ghost(house);
 	
-	while(house.getState()) {
-		std::cout << "LOCATION:" << house.getCurrentRoomName(player.getCurrentRoom()) << " | FEAR: " << player.getFear() << std::endl;
-		switch(gameLoopMenuChoice(player, house)) {
-			case 1:
-				player.updateRoom(house);
-				break;
-			case 2:
-				player.searchRoom(inventory,house);
-				std::cout << "Finished searching " << house.getCurrentRoomName(player.getCurrentRoom()) << std::endl;
-				break;		
-			case 3:
-				if(player.getCurrentRoom() == house.getExitRoom()) {
-					player.leaveHouse( inventory, house );
-					break;
-				}
-				else {
-					std::cout << "Invalid input" << std::endl;
-					break;
-				}
-			case 4:
-				exit = true;
-				break;
-			default:
-				std::cout << "Invalid input" << std::endl;
+	do {
+		ghost.move(house);
+		if(ghost.getCurrentRoom() == player.getCurrentRoom()) {
+			player.setFear(player.getFear() + 1);
 		}
+		if(inventory.checkCharm()) {
+			player.setFear(player.getFear() / 2);
+		}
+		std::cout << "LOCATION:" << house.getCurrentRoomName(player.getCurrentRoom()) << " | FEAR: " << player.getFear() << std::endl;
+		player.move(house,inventory);
+	} while(house.getState() && player.getFear() < 4); 
+
+	if(player.getFear() >= 4) {
+		std::cout << "You Died of Fright" << std::endl;
 	}
 }
 
