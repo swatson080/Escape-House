@@ -194,8 +194,9 @@ class player {
 	private: 
 		int currentRoom;
 		int fear;
+		int turn;
 	public:
-		player() : currentRoom(0), fear(0) {} // Set start room to bedroom
+		player() : currentRoom(0), fear(0), turn(0) {} // Set start room to bedroom
 		// Gets integer input from user
 		int getIntInput(std::string message) {
 			std::string rawInput;
@@ -221,6 +222,14 @@ class player {
 			std::string input;
 			std::getline(std::cin,input);
 			return input;
+		}
+
+		int getTurn() {
+			return turn;
+		}
+
+		void incrementTurn() {
+			++turn;
 		}
 
 		int displayMoveChoice(house &house) {
@@ -282,7 +291,7 @@ class player {
 			std::cout << "Move where?" << std::endl;
 			house.printAvailableRooms(currentRoom);
 			while(true) {
-				int newRoom = getIntInput("Input a room number\n>");
+				int newRoom = getIntInput(">");
 				if(newRoom > 0 && newRoom <= house.getNumRoomExits(currentRoom)) {
 					newRoom = house.getActualMove(currentRoom, newRoom);
 					setCurrentRoom(newRoom);
@@ -299,7 +308,7 @@ class player {
 				if(currentRoom == inventory.getItemLoc(i) && !inventory.checkItemFound(i)) {
 					inventory.incrementItem(i);
 					inventory.setItemFound(i);
-					std::cout << "You found a " << inventory.getItemName(i) << std::endl;
+					std::cout << "You found a " << inventory.getItemName(i) << "!" << std::endl;
 				}
 			}			
 		}
@@ -336,9 +345,9 @@ class ghost {
 
 // FUNCTION DEFINITIONS ////////////////////////////////////////////////////////////////////////////////////////////////////
 int menuChoice();
-int gameLoopMenuChoice(player player, house house);
 int getIntInput(std::string message); 
 std::string getStringInput();
+void printInfo(house &house, player &player);
 void play();
 
 int main() {
@@ -403,25 +412,33 @@ std::string getStringInput() {
 	return input;
 }
 
+void printInfo(house &house, player &player) {
+	
+	std::cout << "TURN: " << player.getTurn() << " | LOCATION: " << house.getCurrentRoomName(player.getCurrentRoom()) << " | FEAR: " << player.getFear() << std::endl;
+
+}
+
 void play() {
+	const int BRAVERY = 6;
 	house house;
 	player player;
 	inventory inventory(house);
 	ghost ghost(house);
 	
 	do {
+		player.incrementTurn();
 		ghost.move(house);
 		if(ghost.getCurrentRoom() == player.getCurrentRoom()) {
-			player.setFear(player.getFear() + 1);
+			player.setFear(player.getFear() + 1 + (player.getTurn() / 2));
 		}
 		if(inventory.checkCharm()) {
 			player.setFear(player.getFear() / 2);
 		}
-		std::cout << "LOCATION:" << house.getCurrentRoomName(player.getCurrentRoom()) << " | FEAR: " << player.getFear() << std::endl;
+		printInfo(house,player);
 		player.move(house,inventory);
-	} while(house.getState() && player.getFear() < 4); 
+	} while(house.getState() && player.getFear() <= BRAVERY); 
 
-	if(player.getFear() >= 4) {
+	if(player.getFear() > BRAVERY) {
 		std::cout << "You Died of Fright" << std::endl;
 	}
 }
